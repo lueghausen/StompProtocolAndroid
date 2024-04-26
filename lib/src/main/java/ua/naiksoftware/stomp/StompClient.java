@@ -242,12 +242,14 @@ public class StompClient {
             return Flowable.error(new IllegalArgumentException("Topic path cannot be null"));
         else if (!streamMap.containsKey(destPath))
             streamMap.put(destPath,
-                    Completable.defer(() -> subscribePath(destPath, headerList)).andThen(
-                    getMessageStream()
-                            .filter(msg -> pathMatcher.matches(destPath, msg))
-                            .toFlowable(BackpressureStrategy.BUFFER)
+                    Completable
+                            .defer(() -> subscribePath(destPath, headerList))
+                            .andThen(
+                                    getMessageStream()
+                                            .filter(msg -> pathMatcher.matches(destPath, msg))
+                                            .toFlowable(BackpressureStrategy.BUFFER)
+                                            .share())
                             .doFinally(() -> unsubscribePath(destPath).subscribe())
-                            .share())
             );
         return streamMap.get(destPath);
     }
